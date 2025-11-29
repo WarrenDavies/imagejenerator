@@ -38,6 +38,7 @@ class ImageGenerator(ABC):
     @abstractmethod
     def run_pipeline_impl(self):
         pass
+    
 
     def generate_image(self):
         self.create_pipeline()
@@ -45,6 +46,7 @@ class ImageGenerator(ABC):
         self.save_image()
         if self.config["save_image_gen_stats"]:
             self.save_image_gen_stats()
+
 
     def save_image(self):
         self.save_timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
@@ -54,12 +56,12 @@ class ImageGenerator(ABC):
             image.save(save_path)
 
 
-    def complete_image_generation_record(self, i):
+    def complete_image_generation_record(self, prompt, i):
         self.image_generation_record.image_gen_data_file_path = self.config["image_gen_data_file_path"]
         self.image_generation_record.filename = f"{self.save_timestamp}_no{i}.png"
         self.image_generation_record.timestamp = self.save_timestamp
         self.image_generation_record.model = self.config["model"]
-        self.image_generation_record.prompt = self.config["prompts"][i]
+        self.image_generation_record.prompt = prompt
         self.image_generation_record.seed = self.config["seed"]
         self.image_generation_record.height = self.config["height"]
         self.image_generation_record.width = self.config["width"]
@@ -75,8 +77,8 @@ class ImageGenerator(ABC):
 
 
     def save_image_gen_stats(self):
-        for i, image in enumerate(self.images):    
-            
-            self.complete_image_generation_record(i)
+        all_prompts_used = self.config["prompts"] * self.config["images_to_generate"]
+        for i, prompt in enumerate(all_prompts_used):
+            self.complete_image_generation_record(prompt, i)
             self.image_generation_record.save_data()
 

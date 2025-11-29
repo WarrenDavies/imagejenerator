@@ -10,18 +10,19 @@ config = {
 
     "height": 512,
     "width": 512,
-    "num_inference_steps": 5,
+    "num_inference_steps": 8,
     "guidance_scale": 10,
-    "images_to_generate": 1,
+    "images_to_generate": 2,
     "seed": 100,
     "dtype": torch.float16,
 
     "image_save_folder": "./images/",
 
     "save_image_gen_stats": True,
-    "image_gen_data_file_path": "./image_gen_stats2.csv",
+    "image_gen_data_file_path": "./stats/image_gen_stats.csv",
 
     "prompts": [
-        "A corgi wearing sunglasses"
+        "A scene from the Street Fighter video game",
+        "The owl of Athena"
     ]
 }

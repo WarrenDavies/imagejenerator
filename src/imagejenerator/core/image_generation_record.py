@@ -2,7 +2,6 @@ from dataclasses import dataclass, fields, field
 import csv
 import os
 from typing import List
-from pydantic import Field
 
 @dataclass
 class ImageGenerationRecord():
@@ -21,8 +20,10 @@ class ImageGenerationRecord():
     image_rating: float = -1
     fields_to_not_save: list[str] = field(default_factory=list)
 
+
     def __post_init__(self):
         self.fields_to_not_save += ["image_gen_data_file_path", "fields_to_not_save", "path_to_csv"]
+
 
     def create_data_row(self):
         row = []
