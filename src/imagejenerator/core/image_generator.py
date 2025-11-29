@@ -23,9 +23,9 @@ class ImageGenerator(ABC):
         pass
 
 
-    def generate_image(self):
+    def run_pipeline(self):
         start_time = time.time()
-        self.generate_image_impl()
+        self.run_pipeline_impl()
         end_time = time.time()
         self.image_generation_record.total_generation_time = end_time - start_time
         self.image_generation_record.generation_time_per_image = (
@@ -36,9 +36,15 @@ class ImageGenerator(ABC):
 
 
     @abstractmethod
-    def generate_image_impl(self):
+    def run_pipeline_impl(self):
         pass
 
+    def generate_image(self):
+        self.create_pipeline()
+        self.run_pipeline()
+        self.save_image()
+        if self.config["save_image_gen_stats"]:
+            self.save_image_gen_stats()
 
     def save_image(self):
         self.save_timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
@@ -49,6 +55,7 @@ class ImageGenerator(ABC):
 
 
     def complete_image_generation_record(self, i):
+        self.image_generation_record.image_gen_data_file_path = self.config["image_gen_data_file_path"]
         self.image_generation_record.filename = f"{self.save_timestamp}_no{i}.png"
         self.image_generation_record.timestamp = self.save_timestamp
         self.image_generation_record.model = self.config["model"]
@@ -68,11 +75,8 @@ class ImageGenerator(ABC):
 
 
     def save_image_gen_stats(self):
-        if not self.config["save_image_gen_stats"]:
-            return
-
         for i, image in enumerate(self.images):    
             
             self.complete_image_generation_record(i)
-            self.image_generation_record.append_to_csv(self.config["image_gen_data_path"])
+            self.image_generation_record.save_data()
 

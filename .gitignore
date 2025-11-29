@@ -1,8 +1,7 @@
 scratch/
 generate_image.py
 images/
-stats.csv
-
+stats/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

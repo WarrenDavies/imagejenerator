@@ -3,11 +3,13 @@ import torch
 from torch import autocast
 import time
 import datetime 
+from imagejenerator.models.registry import register_model
 
 from imagejenerator.core.image_generator import ImageGenerator
 from imagejenerator.models.sd_schedulers import schedulers
 
 
+@register_model("stable-diffusion-v1-5")
 class StableDiffusion_1_5(ImageGenerator):
 
     def __init__(self, config):
@@ -15,7 +17,7 @@ class StableDiffusion_1_5(ImageGenerator):
         self.pipe = None
         self.images = None
         self.prompts = config["prompts"] * config["images_to_generate"]
-        self.dtype = torch.float16
+        self.dtype = config["dtype"]
 
 
     def create_pipeline(self):
@@ -33,7 +35,7 @@ class StableDiffusion_1_5(ImageGenerator):
             self.pipe.scheduler = scheduler.from_config(self.pipe.scheduler.config)
 
 
-    def generate_image_impl(self):
+    def run_pipeline_impl(self):
         with autocast(self.config["device"]):    
             self.images = self.pipe(
                 self.prompts, 

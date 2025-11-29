@@ -1,3 +1,5 @@
+import torch
+
 config = {
     "model": "stable-diffusion-v1-5",
     "model_path": "runwayml/stable-diffusion-v1-5",
@@ -12,11 +14,12 @@ config = {
     "guidance_scale": 10,
     "images_to_generate": 1,
     "seed": 100,
+    "dtype": torch.float16,
 
     "image_save_folder": "./images/",
 
     "save_image_gen_stats": True,
-    "image_gen_data_path": "./stats.csv",
+    "image_gen_data_file_path": "./image_gen_stats2.csv",
 
     "prompts": [
         "A corgi wearing sunglasses"
