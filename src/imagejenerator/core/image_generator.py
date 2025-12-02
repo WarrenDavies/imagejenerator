@@ -9,9 +9,6 @@ from imagejenerator.core.image_generation_record import ImageGenerationRecord
 from imagejenerator.config import config
 
 
-
-
-
 class ImageGenerator(ABC):
     """
     Abstract base class for image generation pipelines using PyTorch.
