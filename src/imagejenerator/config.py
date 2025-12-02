@@ -1,5 +1,3 @@
-import torch
-
 config = {
     "model": "stable-diffusion-v1-5",
     "model_path": "runwayml/stable-diffusion-v1-5",
@@ -23,8 +21,6 @@ config = {
     "image_gen_data_file_path": "./stats/image_gen_stats.csv",
 
     "prompts": [
-        "A beautiful library",
-        "A rockstar playing a guitar solo on stage",
-        "Silhouette of a woman dancing next to a tree in front of a sunset"
+        "A rockstar playing a guitar solo on stage"
     ]
 }
