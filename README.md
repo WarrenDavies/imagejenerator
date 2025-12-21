@@ -4,7 +4,7 @@
 
 `Image Jenerator` is an extensible Python framework designed to run various image generation models (like Stable Diffusion) through a unified, standardized pipeline. 
 
-It takes care of the setup such as device management (CUDA/CPU), mixed-precision handling, and random seed generation. It also automatically generates performance logs including generation time, which you can use for benchmarking, and saves these to CSV.
+It takes care of the setup such as device management (CUDA/CPU), mixed-precision handling, and random seed generation. 
 
 ## Requirements
 
@@ -35,7 +35,7 @@ See the example files:
 * `src/imagejenerator/examples/quick_start.py`
 * `src/imagejenerator/examples/config.py`
 
-Create an image generator by passing your config to `registry.get_model_class(config)`. Your config must contain the name of the model that you want to use (as listed in the registry). This creates your image generator and moves your config into it. Note that the model is not loaded into RAM at this stage. 
+Create an image generator object by passing your config to `registry.get_model_class(config)`. Your config must contain the name of the model that you want to use (as listed in the registry). This creates your image generator and moves your config into it. Note that the model is not loaded into RAM at this stage. 
 
 ```py
 from imagejenerator.models import registry
@@ -57,7 +57,6 @@ image_generator.generate_image()
 1. Creates the pipeline.
 2. Runs the pipeline implementation.
 3. Saves the resulting images to disk.
-4. Optionally saves generation statistics. (if save_image_gen_stats == True in your config)
 
 You can do these separately with:
 
@@ -65,7 +64,6 @@ You can do these separately with:
 image_generator.create_pipeline()
 image_generator.run_pipeline()
 image_generator.save_image()
-image_generator.save_image_gen_stats()
 ```
 
 For example, once the model is loaded into memory, you won't need to run `image_generator.create_pipeline()` again.
@@ -90,20 +88,10 @@ Create a config dictionary with the following keys (default parameters are locat
 | `images_to_generate` | `int` | The number of images to generate per prompt. The batch size will be number of prompts * images_to_generate |
 | `seeds` | `list[int]` | List of random seeds. Leave empty (`[]`) for automatic random generation. |
 | `image_save_folder` | `str` | Output directory for image files. |
-| `save_image_gen_stats` | `bool` | If True, saves detailed metadata to the statistics CSV file. |
-| `image_gen_data_file_path` | `str` | Path to the output statistics CSV file. |
 
-## Benchmarking
+## Utils
 
-Image generation metadata is (optionally) saved to the location specified in your config. This includes your config settings, as well as the generation time.
-
-If you are batching, the generation time will be:
-
-`total generation time / number of images in batch`
-
-When batching the inference steps happen sequentially for all images in the batch. That is, inference step 1 for all images, inference step 2 for all images... and so on. This effectively means that the generation time for all images will reflect the generation time for the *slowest* image.
-
-So you might not want to batch if you're benchmarking different settings, prompt lengths etc.
+See the `jenerationutils` package for additional packages you can use to save generation metadata and benchmarking times.
 
 ## Architecture and Extensibility
 
@@ -116,8 +104,3 @@ All model pipelines inherit from `ImageGenerator`, which defines the standard wo
 ### 2. Model Registration
 
 Each model (or group of models that require the same diffusers class) use their own model class, with the `@register_model` decorator applied to it. This automatically adds model classes to the registry, so that they can be specified in the config.
-
-### 3. Data Logging (`ImageGenerationRecord`)
-
-The `ImageGenerationRecord` class uses Python dataclass features to structure and save the generation parameters (prompt, seed, model, timings, etc.) to a specified CSV file. So you can track and analyse your experiments with different inference steps, prompt lengths, and so on.
-

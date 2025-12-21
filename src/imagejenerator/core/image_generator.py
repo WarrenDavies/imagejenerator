@@ -5,7 +5,6 @@ import os
 import random
 import torch
 
-from imagejenerator.core.image_generation_record import ImageGenerationRecord
 from imagejenerator.config import config
 
 
@@ -24,7 +23,6 @@ class ImageGenerator(ABC):
         seeds (list[int]): List of random seeds used for generation.
         generators (list[torch.Generator]): List of PyTorch generators initialized with seeds.
         images (list): List of generated image objects (usually PIL.Image).
-        image_generation_record (ImageGenerationRecord): Object for tracking generation statistics.
     """
 
     def __init__(self, config = config):
@@ -49,13 +47,15 @@ class ImageGenerator(ABC):
         self.config = config
         self.pipe = None
         self.images = None
-        self.image_generation_record = ImageGenerationRecord()
         self.save_timestamp = None
         self.prompts = []
         self.dtype = None
         self.device = None
         self.seeds = config["seeds"]
         self.generators = []
+        self.filenames = []
+        self.batch = self.config["prompts"] * self.config["images_to_generate"]
+        self.batch_size = len(self.config["prompts"]) * self.config["images_to_generate"]
         self.detect_device_and_dtype()
         self.create_generators()
 
@@ -115,8 +115,7 @@ class ImageGenerator(ABC):
         Populates `self.generators` with `torch.Generator` objects.
         """
         if not self.seeds:
-            batch_size = len(self.config["prompts"]) * self.config["images_to_generate"]
-            self.seeds = [self.create_random_seed() for i in range(batch_size)]
+            self.seeds = [self.create_random_seed() for i in range(self.batch_size)]
                 
         self.generators = [
             torch.Generator(device=self.device).manual_seed(seed)
@@ -151,18 +150,9 @@ class ImageGenerator(ABC):
 
     def run_pipeline(self):
         """
-        Executes the pipeline implementation and tracks performance metrics.
-
-        Calculates total generation time and average time per image, updating
-        the `image_generation_record`.
+        Executes the pipeline implementation.
         """
-        start_time = time.time()
         self.run_pipeline_impl()
-        end_time = time.time()
-        self.image_generation_record.total_generation_time = end_time - start_time
-        self.image_generation_record.generation_time_per_image = (
-            self.image_generation_record.total_generation_time / (self.config["images_to_generate"] * len(self.prompts))
-        )
 
 
     @abstractmethod
@@ -183,13 +173,10 @@ class ImageGenerator(ABC):
             1. Creates the pipeline.
             2. Runs the pipeline implementation.
             3. Saves the resulting images to disk.
-            4. Optionally saves generation statistics.
         """
         self.create_pipeline()
         self.run_pipeline()
         self.save_image()
-        if self.config["save_image_gen_stats"]:
-            self.save_image_gen_stats()
 
 
     def save_image(self):
@@ -200,48 +187,29 @@ class ImageGenerator(ABC):
         """
         self.save_timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         for i, image in enumerate(self.images):
-            file_name = f"{self.save_timestamp}_no{i}.png"
+            file_name = f"{self.save_timestamp}_no{i}.jpg"
+            self.filenames.append(file_name)
             save_path = os.path.join(self.config["image_save_folder"], file_name)
             image.save(save_path)
 
 
-    def complete_image_generation_record(self, prompt, i):
-        """
-        Populates the image generation record with metadata for a specific image.
+    def get_metadata(self):
 
-        Args:
-            prompt (str): The prompt used to generate the image.
-            i (int): The index of the image in the current batch.
-        """
-        self.image_generation_record.image_gen_data_file_path = self.config["image_gen_data_file_path"]
-        self.image_generation_record.filename = f"{self.save_timestamp}_no{i}.png"
-        self.image_generation_record.timestamp = self.save_timestamp
-        self.image_generation_record.model = self.config["model"]
-        self.image_generation_record.device = self.device
-        self.image_generation_record.dtype = self.config["dtype"]
-        self.image_generation_record.prompt = prompt
-        self.image_generation_record.seed = self.seeds[i]
-        self.image_generation_record.height = self.config["height"]
-        self.image_generation_record.width = self.config["width"]
-        self.image_generation_record.inf_steps = self.config["num_inference_steps"]
-        self.image_generation_record.guidance_scale = self.config["guidance_scale"]
-        self.complete_image_generation_record_impl()
-
-
-    @abstractmethod
-    def complete_image_generation_record_impl(self):
-        """
-        Abstract hook for subclasses to add model-specific statistics to the record.
-        """
-        pass
-
-
-    def save_image_gen_stats(self):
-        """
-        Iterates through generated images and saves metadata to the record file.
-        """
-        all_prompts_used = self.config["prompts"] * self.config["images_to_generate"]
-        for i, prompt in enumerate(all_prompts_used):
-            self.complete_image_generation_record(prompt, i)
-            self.image_generation_record.save_data()
-
+        metadata = []
+        for i in range(self.batch_size):
+            metadata.append({
+                "filename": self.filenames[i],
+                "save_path": self.config["image_save_folder"],
+                "timestamp": datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
+                "model": self.config["model"],
+                "device": self.device,
+                "dtype": self.config["dtype"],
+                "prompt": self.prompts[i],
+                "seed": self.seeds[i],
+                "height": self.config["height"],
+                "width": self.config["width"],
+                "inf_steps": self.config["num_inference_steps"],
+                "guidance_scale": self.config["guidance_scale"],
+            })
+        
+        return metadata
