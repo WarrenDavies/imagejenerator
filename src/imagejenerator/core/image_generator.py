@@ -46,7 +46,7 @@ class ImageGenerator(ABC):
         }
         self.config = config
         self.pipe = None
-        self.images = None
+        self.images = []
         self.save_timestamp = None
         self.prompts = []
         self.dtype = None
@@ -153,7 +153,7 @@ class ImageGenerator(ABC):
         Executes the pipeline implementation.
         """
         self.run_pipeline_impl()
-
+        return self.images
 
     @abstractmethod
     def run_pipeline_impl(self):
@@ -213,3 +213,11 @@ class ImageGenerator(ABC):
             })
         
         return metadata
+
+    
+    def get_images(self):
+        """
+        Returns the images stored in the images attribute, or an empty list if none have been generated.
+        """
+        return self.images
+
