@@ -134,7 +134,8 @@ class ImageGenerator(ABC):
         Returns:
             int: A random integer in the range [0, 2**size - 1].
         """
-        return random.randint(0, (2**size) - 1)
+        seed = random.randint(0, (2**size) - 1)
+        return seed
 
 
     @abstractmethod
@@ -153,6 +154,7 @@ class ImageGenerator(ABC):
         Executes the pipeline implementation.
         """
         self.run_pipeline_impl()
+        return [{"artifact": image, "seed": seed} for image, seed in zip(self.images, self.seeds)]
 
 
     @abstractmethod
@@ -213,3 +215,11 @@ class ImageGenerator(ABC):
             })
         
         return metadata
+
+    
+    def get_images(self):
+        """
+        Returns the images stored in the images attribute, along with their seeds, or an empty list if none have been generated.
+        """
+        return zip(self.images, self.seeds)
+
