@@ -46,7 +46,7 @@ class ImageGenerator(ABC):
         }
         self.config = config
         self.pipe = None
-        self.images = []
+        self.images = None
         self.save_timestamp = None
         self.prompts = []
         self.dtype = None
@@ -116,7 +116,7 @@ class ImageGenerator(ABC):
         """
         if not self.seeds:
             self.seeds = [self.create_random_seed() for i in range(self.batch_size)]
-        
+                
         self.generators = [
             torch.Generator(device=self.device).manual_seed(seed)
             for seed in self.seeds
