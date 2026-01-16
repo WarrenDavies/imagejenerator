@@ -3,6 +3,8 @@ import datetime
 import time
 import os
 import random
+import gc
+
 import torch
 
 from imagejenerator.config import config
@@ -222,4 +224,23 @@ class ImageGenerator(ABC):
         Returns the images stored in the images attribute, along with their seeds, or an empty list if none have been generated.
         """
         return zip(self.images, self.seeds)
+
+
+    def teardown(self):
+        """
+        Deletes the pipeline, empties the torch cache, and forces Python's garbage collector to run. Clears the slate to create
+        another pipeline.
+        """
+
+        if self.pipe is None:
+            print("No pipeline found. You cannot teardown that which was not created.")
+            return
+
+        del self.pipe
+        self.pipeline = None
+
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        gc.collect()
 
