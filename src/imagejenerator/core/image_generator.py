@@ -116,7 +116,7 @@ class ImageGenerator(ABC):
         """
         if not self.seeds:
             self.seeds = [self.create_random_seed() for i in range(self.batch_size)]
-                
+        
         self.generators = [
             torch.Generator(device=self.device).manual_seed(seed)
             for seed in self.seeds
@@ -134,7 +134,8 @@ class ImageGenerator(ABC):
         Returns:
             int: A random integer in the range [0, 2**size - 1].
         """
-        return random.randint(0, (2**size) - 1)
+        seed = random.randint(0, (2**size) - 1)
+        return seed
 
 
     @abstractmethod
@@ -153,7 +154,8 @@ class ImageGenerator(ABC):
         Executes the pipeline implementation.
         """
         self.run_pipeline_impl()
-        return self.images
+        return [{"artifact": image, "seed": seed} for image, seed in zip(self.images, self.seeds)]
+
 
     @abstractmethod
     def run_pipeline_impl(self):
@@ -217,7 +219,7 @@ class ImageGenerator(ABC):
     
     def get_images(self):
         """
-        Returns the images stored in the images attribute, or an empty list if none have been generated.
+        Returns the images stored in the images attribute, along with their seeds, or an empty list if none have been generated.
         """
-        return self.images
+        return zip(self.images, self.seeds)
 
