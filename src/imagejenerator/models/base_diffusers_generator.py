@@ -9,16 +9,16 @@ from imagejenerator.models.sd_schedulers import schedulers
 
 class BaseDiffusersGenerator(ImageGenerator):
     """
-    Concrete implementation of ImageGenerator for Stable Diffusion v1.5.
+    Base class with common attributes and method needed to run diffusion models locally.
 
-    This class handles the loading and inference of the Stable Diffusion v1.5 model
-    using the Hugging Face Diffusers library. It supports custom schedulers,
-    attention slicing for memory optimization, and mixed-precision inference.
+    This class handles configuration, loading and inference using the Hugging Face 
+    Diffusers library. It supports custom schedulers, attention slicing for memory 
+    optimization, and mixed-precision inference.
     """
 
     def __init__(self, config):
         """
-        Initializes the Stable Diffusion 1.5 generator.
+        Initializes the generator.
 
         This method expands the 'prompts' list in the config to match the total
         number of images to generate (prompts * images_per_prompt) to facilitate
@@ -64,13 +64,15 @@ class BaseDiffusersGenerator(ImageGenerator):
 
     def create_pipeline(self):
         """
-        Loads the Stable Diffusion pipeline and applies configurations.
+        Loads the diffusion pipeline and applies config.
 
         Steps taken:
-        1. Loads the pipeline using `StableDiffusionPipeline.from_pretrained`.
+        1. Loads the pipeline using `self.model_class.from_pretrained` (self.model_class
+           would be defined in the child class, or manually in the program into which 
+           imagejenerator has been installed).
         2. Moves the pipeline to the specific device (CPU/CUDA).
-        3. Enables attention slicing if `config['enable_attention_slicing']` is True.
-        4. Swaps the default scheduler if `config['scheduler']` is specified.
+        3. Enables attention slicing, applied a scheduler, and applies vae tiling if the
+           config says to do so
 
         Raises:
             KeyError: If specific config keys (like 'model_path') are missing.
@@ -84,7 +86,7 @@ class BaseDiffusersGenerator(ImageGenerator):
 
     def run_pipeline_impl(self):
         """
-        Executes the Stable Diffusion inference.
+        Executes the diffusion inference.
 
         Runs the pipeline within a `torch.autocast` context to ensure the correct
         precision (e.g., bfloat16) is used on the target device.
@@ -104,9 +106,8 @@ class BaseDiffusersGenerator(ImageGenerator):
 
     def complete_image_generation_record_impl(self):
         """
-        Implementation hook for recording extra stats.
-
-        Currently a no-op for SD 1.5 as the base class records all necessary metadata.
+        Implementation hook for recording benchmarking data. This is deprecated: see
+        the "benchmarker" package in the "jenerationutils" library.
         """
         pass
 
