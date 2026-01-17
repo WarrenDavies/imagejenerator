@@ -226,7 +226,7 @@ class ImageGenerator(ABC):
         return zip(self.images, self.seeds)
 
 
-    def teardown(self):
+    def teardown_pipeline(self):
         """
         Deletes the pipeline, empties the torch cache, and forces Python's garbage collector to run. Clears the slate to create
         another pipeline.
@@ -244,3 +244,11 @@ class ImageGenerator(ABC):
 
         gc.collect()
 
+
+    @abstractmethod
+    def get_runtime_params(self) -> set[str]:
+        """
+        Abstract method to return parameters in the model that, if changed, DO NOT require
+        a teardown and reload of the model. For example, guidance scale, num inference steps.     
+        """
+        return set()
