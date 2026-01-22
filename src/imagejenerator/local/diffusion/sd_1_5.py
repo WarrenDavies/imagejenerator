@@ -3,14 +3,14 @@ import torch
 from torch import autocast
 import time
 import datetime 
-from imagejenerator.models.registry import register_model
 
-from imagejenerator.core.image_generator import ImageGenerator
-from imagejenerator.models.sd_schedulers import schedulers
-
+from basejenerator.generator_output import GeneratorOutput
+from imagejenerator.local.diffusion.registry import register_model
+from imagejenerator.local.diffusion.base_diffusers_generator import BaseDiffusersGenerator
+from basejenerator.generator_output import GeneratorOutput
 
 @register_model("stable-diffusion-v1-5")
-class StableDiffusion_1_5(ImageGenerator):
+class StableDiffusion_1_5(BaseDiffusersGenerator):
     """
     Concrete implementation of ImageGenerator for Stable Diffusion v1.5.
 
@@ -18,6 +18,7 @@ class StableDiffusion_1_5(ImageGenerator):
     using the Hugging Face Diffusers library. It supports custom schedulers,
     attention slicing for memory optimization, and mixed-precision inference.
     """
+
 
     def __init__(self, config):
         """
@@ -32,41 +33,24 @@ class StableDiffusion_1_5(ImageGenerator):
                            keys plus model-specific keys.
         """
         super().__init__(config)
-        self.pipe = None
-        self.images = None
-        self.prompts = config["prompts"] * config["images_to_generate"]
+        self.ModelClass = StableDiffusionPipeline
 
-
-    def create_pipeline(self):
-        """
-        Loads the Stable Diffusion pipeline and applies configurations.
-
-        Steps taken:
-        1. Loads the pipeline using `StableDiffusionPipeline.from_pretrained`.
-        2. Moves the pipeline to the specific device (CPU/CUDA).
-        3. Enables attention slicing if `config['enable_attention_slicing']` is True.
-        4. Swaps the default scheduler if `config['scheduler']` is specified.
-
-        Raises:
-            KeyError: If specific config keys (like 'model_path') are missing.
-        """
-        self.pipe = StableDiffusionPipeline.from_pretrained(
+    def load(self):
+        self.model = self.ModelClass.from_pretrained(
             self.config["model_path"],
             torch_dtype=self.dtype,
-            safety_checker=None
+            safety_checker=None,
         ).to(self.device)
 
-        if self.config["enable_attention_slicing"]:
-            self.pipe.enable_attention_slicing()
-
-        if self.config["scheduler"]:
-            scheduler = schedulers[self.config["scheduler"]]
-            self.pipe.scheduler = scheduler.from_config(self.pipe.scheduler.config)
+        self.configure_attention_slicing()
+        self.configure_scheduler()
+        self.configure_vae_tiling()
+        self.prepare()
 
 
-    def run_pipeline_impl(self):
+    def generate_impl(self):
         """
-        Executes the Stable Diffusion inference.
+        Executes the diffusion inference.
 
         Runs the pipeline within a `torch.autocast` context to ensure the correct
         precision (e.g., bfloat16) is used on the target device.
@@ -74,7 +58,31 @@ class StableDiffusion_1_5(ImageGenerator):
         The resulting images are stored in `self.images`.
         """
         with autocast(self.device):    
-            self.images = self.pipe(
+            images = self.model(
+                self.prompts, 
+                height = self.config["height"], 
+                width = self.config["width"],
+                num_inference_steps = self.config["num_inference_steps"],
+                guidance_scale = self.config["guidance_scale"],
+                generator=self.generators,
+            ).images
+
+        item_extras = [{"seed": seed} for seed in self.seeds]
+        artifacts = self._quick_wrap(images, item_extras)
+
+        return GeneratorOutput(artifacts)
+
+
+    def run_pipeline_impl(self):
+        """
+        Executes the Stable Diffusion inference.
+
+        Runs the pipeline within a `torch.autocast` context to ensure the correct precision (e.g., bfloat16) is used on the target device.
+
+        The resulting images are stored in `self.images`.
+        """
+        with autocast(self.device):    
+            images = self.model(
                 self.prompts, 
                 height = self.config["height"], 
                 width = self.config["width"],

@@ -28,6 +28,7 @@ transformers = ">=4.40"
 accelerate = ">=0.30"
 Pillow = ">=10.0"
 pyyaml = ">=6.0"
+basejenerator = {path = "../base-jenerator", develop = true}
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

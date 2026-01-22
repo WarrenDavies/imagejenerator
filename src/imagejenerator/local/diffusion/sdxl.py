@@ -4,9 +4,8 @@ from torch import autocast
 import time
 import datetime 
 
-from imagejenerator.models.registry import register_model
-from imagejenerator.models.base_diffusers_generator import BaseDiffusersGenerator
-from imagejenerator.models.sd_schedulers import schedulers
+from imagejenerator.local.diffusion.registry import register_model
+from imagejenerator.local.diffusion.base_diffusers_generator import BaseDiffusersGenerator
 
 
 @register_model("sdxl")
@@ -17,12 +16,10 @@ class SDXL(BaseDiffusersGenerator):
 
     def __init__(self, config):
         """
-        Imports the SDXL diffusers class and stores it in self.ModelClass, so that it can be used
-        to call `from_pretrained()`.
+        Imports the SDXL diffusers class and stores it in self.ModelClass, so that it can be used to call `from_pretrained()`.
 
         Args:
-            config (dict): Configuration dictionary. Must include standard ImageGenerator
-                           keys plus model-specific keys.
+            config (dict): Configuration dictionary.
         """
         super().__init__(config)
         self.ModelClass = StableDiffusionXLPipeline

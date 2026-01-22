@@ -34,6 +34,20 @@ test-trackers = ["comet-ml", "dvclive", "matplotlib", "swanlab[dashboard]", "ten
 testing = ["bitsandbytes", "datasets", "diffusers", "evaluate", "parameterized", "pytest (>=7.2.0)", "pytest-order", "pytest-subtests", "pytest-xdist", "scikit-learn", "scipy", "timm", "torchdata (>=0.8.0)", "torchpippy (>=0.2.0)", "tqdm", "transformers"]
 
 [[package]]
+name = "basejenerator"
+version = "0.1.0"
+description = "Abstract base class and return formats for AI Generator classes within the Jeneratorverse."
+optional = false
+python-versions = ">=3.10,<3.15"
+groups = ["main"]
+files = []
+develop = true
+
+[package.source]
+type = "directory"
+url = "../base-jenerator"
+
+[[package]]
 name = "certifi"
 version = "2025.11.12"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -1575,4 +1589,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.15"
-content-hash = "0b7bab844d2d0ec7abacd77982f8a40bb405294b0476753ed5129b47916b8ebd"
+content-hash = "aabb9902a861c130328be0fd1493d36191a6153cd7d8850afaa2c56063b06bb0"

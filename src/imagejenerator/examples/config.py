@@ -8,7 +8,7 @@ config = {
 
     "height": 512,
     "width": 512,
-    "num_inference_steps": 30,
+    "num_inference_steps": 10,
     "guidance_scale": 10,
     "images_to_generate": 1,
     "seeds": [], # leave empty for random

@@ -41,103 +41,11 @@ class ImageGenerator(ABC):
                 - 'images_to_generate': Int, number of images per prompt.
                 - 'image_save_folder': Path to save output images.
         """
-        self.DTYPES_MAP = {
-            "bfloat16": torch.bfloat16,
-            "float16": torch.float16,
-            "float32": torch.float32,
-        }
+        super().__init__(config)
         self.config = config
-        self.pipe = None
-        self.images = None
-        self.save_timestamp = None
-        self.prompts = []
-        self.dtype = None
-        self.device = None
-        self.seeds = config["seeds"]
-        self.generators = []
-        self.filenames = []
-        self.batch = self.config["prompts"] * self.config["images_to_generate"]
-        self.batch_size = len(self.config["prompts"]) * self.config["images_to_generate"]
-        self.detect_device_and_dtype()
-        self.create_generators()
 
 
-    def detect_device_and_dtype(self):
-        """
-        If 'device' or 'dtype' in config are set to "detect", this method attempts
-        to choose the optimal settings based on hardware availability (e.g., CUDA).
-        """
-        if self.config["device"] == "detect":
-            self.set_device()
-        else:
-            self.device = self.config["device"]
 
-        self.set_dtype()
-        
-
-    def set_device(self):
-        """
-        Sets the computation device based on CUDA availability.
-
-        Sets `self.device` to 'cuda' if available, otherwise defaults to 'cpu'.
-        """
-        if torch.cuda.is_available():
-            self.device = "cuda"
-        else:
-            self.device = "cpu"
-
-
-    def set_dtype(self):
-        """
-        Sets the torch data type based on the device and configuration.
-
-        If config['dtype'] is "detect":
-            - Sets to torch.bfloat16 if device is 'cuda'.
-            - Sets to torch.float32 otherwise.
-        Otherwise, maps the string config to the actual torch.dtype object in self.DTYPES_MAP.
-        """
-        if self.config["dtype"] == "detect":
-            if self.device == "cuda":
-                self.dtype = torch.bfloat16
-                self.config["dtype"] = "bfloat16"
-            else:
-                self.dtype = torch.float32
-                self.config["dtype"] = "float32"
-            return
-        
-        self.dtype = self.DTYPES_MAP[self.config["dtype"]]
-
-
-    def create_generators(self):
-        """
-        Initializes random seeds and PyTorch Generators.
-
-        If seeds are not provided in the config, random seeds are generated
-        for the total batch size (number of prompts * images per prompt).
-        Populates `self.generators` with `torch.Generator` objects.
-        """
-        if not self.seeds:
-            self.seeds = [self.create_random_seed() for i in range(self.batch_size)]
-                
-        self.generators = [
-            torch.Generator(device=self.device).manual_seed(seed)
-            for seed in self.seeds
-        ]
-
-
-    @staticmethod
-    def create_random_seed(size: int = 32) -> int:
-        """
-        Generates a random integer to serve as a seed.
-
-        Args:
-            size (int, optional): The bit-size for the random range. Defaults to 32.
-
-        Returns:
-            int: A random integer in the range [0, 2**size - 1].
-        """
-        seed = random.randint(0, (2**size) - 1)
-        return seed
 
 
     @abstractmethod
@@ -183,7 +91,7 @@ class ImageGenerator(ABC):
         self.save_image()
 
 
-    def save_image(self):
+    def save(self):
         """
         Saves generated images to the configured directory.
 
