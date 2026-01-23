@@ -5,7 +5,7 @@ import time
 import datetime 
 
 from basejenerator.generator_output import GeneratorOutput
-from imagejenerator.local.diffusion.registry import register_model
+from imagejenerator.registry import register_model
 from imagejenerator.local.diffusion.base_diffusers_generator import BaseDiffusersGenerator
 from basejenerator.generator_output import GeneratorOutput
 

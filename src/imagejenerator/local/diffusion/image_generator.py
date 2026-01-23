@@ -7,8 +7,6 @@ import gc
 
 import torch
 
-from imagejenerator.config import config
-
 
 class ImageGenerator(ABC):
     """
@@ -27,7 +25,7 @@ class ImageGenerator(ABC):
         images (list): List of generated image objects (usually PIL.Image).
     """
 
-    def __init__(self, config = config):
+    def __init__(self, config):
         """
         Initializes the ImageGenerator with a configuration.
 
@@ -39,13 +37,9 @@ class ImageGenerator(ABC):
                 - 'seeds': List of integers or None.
                 - 'prompts': List of prompt strings.
                 - 'images_to_generate': Int, number of images per prompt.
-                - 'image_save_folder': Path to save output images.
         """
         super().__init__(config)
         self.config = config
-
-
-
 
 
     @abstractmethod
@@ -151,4 +145,3 @@ class ImageGenerator(ABC):
             torch.cuda.empty_cache()
 
         gc.collect()
-
