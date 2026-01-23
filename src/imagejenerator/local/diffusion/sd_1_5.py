@@ -100,3 +100,21 @@ class StableDiffusion_1_5(BaseDiffusersGenerator):
         """
         pass
 
+
+    def get_runtime_params(self) -> set[str]:
+        """
+        Returns parameters in the model that, if changed, DO NOT require a teardown and 
+        reload of the model.
+
+        Returns:
+            Set[str]: A set containing the names of the parameters.     
+        """
+        return (
+            "prompt",
+            "negative_prompt",
+            "height",
+            "width",
+            "num_inference_steps",
+            "guidance_scale",
+            "generator",
+        )
