@@ -4,10 +4,10 @@ from torch import autocast
 import time
 import datetime 
 
-from basejenerator.generator_output import GeneratorOutput
 from imagejenerator.registry import register_model
 from imagejenerator.local.diffusion.base_diffusers_generator import BaseDiffusersGenerator
 from basejenerator.generator_output import GeneratorOutput
+from basejenerator.artifacts.pil_artifact import PILArtifact
 
 @register_model("stable-diffusion-v1-5")
 class StableDiffusion_1_5(BaseDiffusersGenerator):
@@ -68,10 +68,10 @@ class StableDiffusion_1_5(BaseDiffusersGenerator):
             ).images
 
         item_extras = [{"seed": seed} for seed in self.seeds]
-        artifacts = self._quick_wrap(images, item_extras)
+        artifacts = self._quick_wrap(images, item_extras, PILArtifact)
 
         return GeneratorOutput(artifacts)
-
+        
 
     def run_pipeline_impl(self):
         """

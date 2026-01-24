@@ -6,7 +6,8 @@ import datetime
 
 from imagejenerator.registry import register_model
 from imagejenerator.local.diffusion.base_diffusers_generator import BaseDiffusersGenerator
-
+from basejenerator.generator_output import GeneratorOutput
+from basejenerator.artifacts.pil_artifact import PILArtifact
 
 @register_model("sdxl")
 class SDXL(BaseDiffusersGenerator):
@@ -25,18 +26,18 @@ class SDXL(BaseDiffusersGenerator):
         self.ModelClass = StableDiffusionXLPipeline
 
 
-    def load_model(self):
+    def load(self):
         print("loading model,", self.dtype)
-        self.pipe = self.ModelClass.from_pretrained(
+        self.model = self.ModelClass.from_pretrained(
             self.config["model_path"],
             torch_dtype=self.dtype,
             variant="fp16",
         )
 
-        self.pipe = self.pipe.to(self.device)
+        self.model = self.model.to(self.device)
 
 
-    def run_pipeline_impl(self):
+    def generate_impl(self):
         """
         Executes the Stable Diffusion inference.
 
@@ -47,7 +48,7 @@ class SDXL(BaseDiffusersGenerator):
         """
         print("running pipe from SDXL Class")
           
-        self.images = self.pipe(
+        images = self.model(
             self.prompts, 
             height = self.config["height"], 
             width = self.config["width"],
@@ -55,3 +56,8 @@ class SDXL(BaseDiffusersGenerator):
             guidance_scale = self.config["guidance_scale"],
             generator=self.generators,
         ).images
+        
+        item_extras = [{"seed": seed} for seed in self.seeds]
+        artifacts = self._quick_wrap(images, item_extras, PILArtifact)
+
+        return GeneratorOutput(artifacts)
