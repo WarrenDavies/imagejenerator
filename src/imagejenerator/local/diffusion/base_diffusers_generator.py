@@ -3,6 +3,7 @@ import time
 import datetime
 import random
 from abc import ABC, abstractmethod
+import gc
 
 from basejenerator.base_generator import BaseGenerator
 
