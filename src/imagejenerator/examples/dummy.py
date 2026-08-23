@@ -1,4 +1,5 @@
 import datetime
+import uuid
 
 from imagejenerator import registry
 
@@ -19,7 +20,9 @@ config = {
     "dtype": "bfloat16",
 
     "prompts": [
-        "A rockstar playing a guitar solo on stage"
+        "A rockstar playing a guitar solo on stage",
+        "#3db5ee",
+        "e18aab",
     ]
 }
 
@@ -28,4 +31,5 @@ image_generator.load()
 image_generator.prepare()
 output = image_generator.generate()
 ts = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-output.batch[0].data.save(f"images/{ts}.png")
+for image in output.batch:
+    image.data.save(f"images/{ts}_{str(uuid.uuid4())[:8]}.png")

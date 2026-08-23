@@ -5,14 +5,19 @@ import random
 from abc import ABC, abstractmethod
 import gc
 import hashlib
+import re
 
 from pydantic import BaseModel
-
-from basejenerator.base_generator import BaseGenerator
-
 from PIL import Image
 
+from basejenerator.base_generator import BaseGenerator
+from basejenerator.artifacts.pil_artifact import PILArtifact
+from basejenerator.generator_output import GeneratorOutput
 
+from imagejenerator.registry import register_model
+
+
+@register_model("dummy")
 class DummyGenerator(BaseGenerator):
     """
     Dummy image generator class for testing
@@ -131,7 +136,7 @@ class DummyGenerator(BaseGenerator):
         Lifecycle tasks to set up the pipeline for use. Can be used to reset without
         tearing down the pipeline (e.g., reset torch generators)
         """
-        return None
+        self.create_generators()
 
 
     def load(self):
@@ -145,7 +150,7 @@ class DummyGenerator(BaseGenerator):
         return None
 
 
-    def get_colour_hex_if_exists(prompt: str) -> str | None:
+    def get_colour_hex_if_exists(self, prompt: str) -> str | None:
         prompt = prompt.strip()
 
         if re.fullmatch(r"#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})", prompt):
@@ -157,19 +162,18 @@ class DummyGenerator(BaseGenerator):
         return None
 
 
-    def get_rbg_colours_from_prompt(prompt: str) -> tuple[int, int, int]:
+    def get_rbg_colours_from_prompt(self, prompt: str) -> tuple[int, int, int]:
         prompt_digest = hashlib.sha256(prompt.encode("utf-8")).digest()
-        return (digest[0], digest[1], digest[2])
+        return (prompt_digest[0], prompt_digest[1], prompt_digest[2])
 
 
-    def prompt_to_colour(self):
-        if hex_colour_code := get_colour_hex_if_exists(prompt):
+    def prompt_to_colour(self, prompt: str):
+        if hex_colour_code := self.get_colour_hex_if_exists(prompt):
             return hex_colour_code
 
-        return get_rbg_colours_from_prompt(prompt)
+        return self.get_rbg_colours_from_prompt(prompt)
 
 
-    @abstractmethod
     def generate_impl(self):
         """
         Subclasses must implement their own execution.
@@ -179,8 +183,14 @@ class DummyGenerator(BaseGenerator):
 
         The resulting images are stored in `self.images`.
         """
-        colour = prompt_to_colour()
-        return Image.new("RGB", (width, height), prompt)
+        images = []
+        for prompt in self.config["prompts"]:
+            colour = self.prompt_to_colour(prompt)
+            images.append(Image.new("RGB", (self.config["width"], self.config["height"]), colour))
+
+        item_extras = [{"seed": seed} for seed in self.seeds]
+        artifacts = self._quick_wrap(images, item_extras, PILArtifact)
+        return GeneratorOutput(artifacts)
         
 
     def teardown(self):
@@ -232,3 +242,4 @@ class DummyGenerator(BaseGenerator):
             scheduler: str = ""
 
         return ParamsSchema
+        
