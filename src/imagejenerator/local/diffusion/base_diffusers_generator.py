@@ -5,6 +5,8 @@ import random
 from abc import ABC, abstractmethod
 import gc
 
+from pydantic import BaseModel
+
 from basejenerator.base_generator import BaseGenerator
 
 from imagejenerator.local.diffusion.sd_schedulers import schedulers
@@ -161,6 +163,11 @@ class BaseDiffusersGenerator(BaseGenerator):
         Subclasses must implement their own model loading
         """
 
+
+    def warmup(self):
+        return
+
+
     @abstractmethod
     def generate_impl(self):
         """
@@ -184,7 +191,7 @@ class BaseDiffusersGenerator(BaseGenerator):
             return
 
         del self.model
-        self.pipeline = None
+        self.model = None
 
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
@@ -212,3 +219,17 @@ class BaseDiffusersGenerator(BaseGenerator):
             "guidance_scale",
             "generator",
         )
+
+
+    def get_params_schema(self):
+        class ParamsSchema(BaseModel):
+            dtype: str = ""
+            seed: int = 0
+            height: int = 0
+            width: int = 0
+            num_inference_steps: int = 0
+            guidance_scale: float = 0
+            enable_attention_slicing: bool = True
+            scheduler: str = ""
+
+        return ParamsSchema
