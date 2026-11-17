@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "imagejenerator"
-version = "2.1.0"
+version = "2.2.0"
 description = "Image generation suite."
 readme = "README.md"
 authors = ["Warren Davies"]
@@ -23,11 +23,15 @@ classifiers = [
 [tool.poetry.dependencies]
 python = ">=3.10,<3.15"
 torch = ">=2.9"
+torchvision = ">=0.24"
 diffusers = ">=0.35"
 transformers = ">=4.40"
 accelerate = ">=0.30"
 Pillow = ">=10.0"
 pyyaml = ">=6.0"
+basejenerator = "^0.2.0"
+pydantic = "^2.13.4"
+
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
