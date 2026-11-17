@@ -106,6 +106,8 @@ class BaseDiffusersGenerator(BaseGenerator):
         for the total batch size (number of prompts * images per prompt).
         Populates `self.generators` with `torch.Generator` objects.
         """
+        self.batch = self.config["prompts"] * self.config["images_to_generate"]
+
         if not self.seeds:
             self.seeds = [self.create_random_seed() for i in range(self.batch_size)]
                 
